@@ -19,6 +19,7 @@ The primary goal of these labs is to provide hands-on experience with:
 | **1** | **EIP Routing** | Implement Splitter, Content-Based Router, and Aggregator patterns using RabbitMQ and Python. | 17 February 2026 | [Go to Lab](./practice-00-routing) |
 | **2** | **Data Integration & Schema Transformation** | Transform different order formats (Web, Mobile, B2B) into a canonical schema using Node-RED. | **February 27th** | [Go to Lab](./practice-01-transformation) |
 | **3** | **Event-Driven Messaging with RabbitMQ** | Implement publish-subscribe messaging with retries, DLQ handling, correlation IDs, and idempotent consumers using RabbitMQ and Node.js. | **08.03.2026, 20:00 EET (Europe/Riga, UTC+2)** | [Go to Lab](./practice-02-events) |
+|**4**| **API orchestration**| Implement API orchestration| **15.03.2026, 20:00 EET (Europe/Riga, UTC+2)**| [Go to lab](./practice-03-api_orchestration_and_composition/) |
 
 
 > *More labs will be added as the course progresses.*
