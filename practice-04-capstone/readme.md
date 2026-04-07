@@ -44,7 +44,7 @@ graph TD
 ---
 
 ## 2.2 Integration Architecture Diagram
-```markdown
+
 ```mermaid
 sequenceDiagram
     participant C as Client
@@ -85,7 +85,7 @@ sequenceDiagram
 ---
 
 ## 2.3 Orchestration Flow
-```markdown
+
 ```mermaid
 flowchart TD
 
