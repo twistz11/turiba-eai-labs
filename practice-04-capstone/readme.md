@@ -42,8 +42,6 @@ sequenceDiagram
             NR-->>C: status: completed
         end
     end
-	
----
 
 ## 3. Pattern Mapping Table
 
