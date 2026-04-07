@@ -16,6 +16,7 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 ### Sequence Diagram (Saga Pattern)
 
 This diagram shows the "Happy Path" and how the system handles failures using the Saga pattern.
+
 ```mermaid
 sequenceDiagram
     participant C as Client
@@ -46,6 +47,7 @@ sequenceDiagram
             NR-->>C: status completed
         end
     end
+---
 
 ## 3. Pattern Mapping Table
 
