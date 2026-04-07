@@ -46,6 +46,7 @@ sequenceDiagram
             NR-->>C: status completed
         end
     end
+
 ---
 
 ## 3. Pattern Mapping Table
@@ -66,13 +67,13 @@ I successfully implemented and tested the two mandatory failure scenarios to ens
 ### Scenario 1: Payment Rejection
 * **Setup**: `PAYMENT_FAIL_MODE` set to `always` in `docker-compose.yml`.
 * **System Reaction**: The Payment Service returns a **402 Payment Required** status. Node-RED detects this via a `switch` node and immediately halts the orchestration.
-* **Final State**: API returns `status: failed`. The Inventory service is **never called**, preventing accidental stock reservation.
+* **Final State**: API returns `status: failed`. The Inventory service is **never called**.
 
 ### Scenario 2: Inventory Unavailable (Compensation)
 * **Setup**: `PAYMENT_FAIL_MODE` set to `never`, `INVENTORY_FAIL_MODE` set to `always`.
-* **System Reaction**: Payment succeeds (200 OK), but Inventory returns **503 Service Unavailable**.
-* **Compensation**: Node-RED catches the 503 error and triggers a **Compensating Transaction** (`POST /payment/refund`) to roll back the payment.
-* **Final State**: API returns `status: compensated`. The customer is notified of the failure, and their funds are released.
+* **System Reaction**: Payment succeeds, but Inventory returns **503 Service Unavailable**.
+* **Compensation**: Node-RED catches the 503 error and triggers a **Compensating Transaction** (`POST /payment/refund`).
+* **Final State**: API returns `status: compensated`.
 
 ---
 
@@ -80,17 +81,11 @@ I successfully implemented and tested the two mandatory failure scenarios to ens
 
 I used **Gemini AI** as an adaptive collaborator to design, debug, and refine this integration system. 
 
-### Key Technical Challenges Solved:
+### 🛠 Key Technical Challenges Solved:
 
 1. **HTTP Status Code Logic**: 
-   Initially, my mock services returned error messages within a `200 OK` response. I discovered that Node-RED's orchestration logic requires explicit non-200 statuses (like **402** or **503**) to properly trigger conditional routing. I refactored the Express.js services to use `res.status(code).json()`.
-
-2. **Strict Data Typing in Switch Nodes**: 
-   I encountered a bug where the orchestrator ignored error paths. The issue was a type mismatch: I was comparing the incoming `msg.statusCode` (Number) against a String "200". Changing the `switch` node property type to **Number (#)** resolved the routing.
-
+   Refactored services to use explicit non-200 statuses (402/503) so Node-RED could trigger error paths.
+2. **Strict Data Typing**: 
+   Fixed a bug in the `switch` node by ensuring `msg.statusCode` is treated as a **Number (#)**, not a String.
 3. **Persistent Trace State**: 
-   To meet the requirement of a full execution trace, I used **JSONata** expressions:
-   `$append(msg.trace, {"step": "payment-refund", "status": "success"})`
-   This ensured that even during compensation, the history of the order remained intact and traceable for the end user.
-
----
+   Used **JSONata** `$append()` to maintain a full execution history, even during compensation steps.
