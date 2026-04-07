@@ -1,273 +1,753 @@
 [
-  {
-    "id": "tab-example",
-    "type": "tab",
-    "label": "Example",
-    "disabled": false,
-    "info": "Hello-world reference flow. You can delete this tab when you are done."
-  },
-  {
-    "id": "example-http-in",
-    "type": "http in",
-    "z": "tab-example",
-    "name": "GET /hello",
-    "url": "/hello",
-    "method": "get",
-    "upload": false,
-    "swaggerDoc": "",
-    "x": 140,
-    "y": 80,
-    "wires": [["example-fn"]]
-  },
-  {
-    "id": "example-fn",
-    "type": "function",
-    "z": "tab-example",
-    "name": "Say hello",
-    "func": "msg.payload = { message: 'Hello from Node-RED!' };\nreturn msg;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 320,
-    "y": 80,
-    "wires": [["example-http-out"]]
-  },
-  {
-    "id": "example-http-out",
-    "type": "http response",
-    "z": "tab-example",
-    "name": "HTTP Response",
-    "statusCode": "200",
-    "headers": { "content-type": "application/json" },
-    "x": 520,
-    "y": 80,
-    "wires": []
-  },
-  {
-    "id": "tab-orchestration",
-    "type": "tab",
-    "label": "Orchestration",
-    "disabled": false,
-    "info": "Main business process flow.\nBuild the happy path here: order intake → routing → payment → inventory → notification → response.\nAlso wire in the error paths that lead to the Error Handling tab."
-  },
-  {
-    "id": "orch-intake",
-    "type": "http in",
-    "z": "tab-orchestration",
-    "name": "TODO: Define your entry point\n(e.g. POST /order or POST /checkout)",
-    "url": "/order",
-    "method": "post",
-    "upload": false,
-    "swaggerDoc": "",
-    "x": 160,
-    "y": 80,
-    "wires": [["orch-router"]]
-  },
-  {
-    "id": "orch-router",
-    "type": "function",
-    "z": "tab-orchestration",
-    "name": "TODO: Content-Based Router\nRoute by orderType (standard / express / b2b)\nUse a switch node or routing logic here.\nDo NOT implement all logic in a single function node.",
-    "func": "// TODO: implement Content-Based Router\n// Read msg.payload.orderType and route accordingly\n// Consider using a separate switch node instead of this function node\nnode.error('Content-Based Router not implemented');\nreturn null;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 420,
-    "y": 80,
-    "wires": [[]]
-  },
-  {
-    "id": "orch-payment",
-    "type": "http request",
-    "z": "tab-orchestration",
-    "name": "TODO: Call Payment Service\nPOST /payment/authorize\nInclude correlationId in header and body",
-    "method": "POST",
-    "ret": "obj",
-    "paytoqs": "ignore",
-    "url": "",
-    "tls": "",
-    "persist": false,
-    "proxy": "",
-    "authType": "",
-    "x": 420,
-    "y": 200,
-    "wires": [[]]
-  },
-  {
-    "id": "orch-inventory",
-    "type": "http request",
-    "z": "tab-orchestration",
-    "name": "TODO: Call Inventory Service\nPOST /inventory/reserve\nOnly call if payment succeeded",
-    "method": "POST",
-    "ret": "obj",
-    "paytoqs": "ignore",
-    "url": "",
-    "tls": "",
-    "persist": false,
-    "proxy": "",
-    "authType": "",
-    "x": 420,
-    "y": 320,
-    "wires": [[]]
-  },
-  {
-    "id": "orch-notification",
-    "type": "http request",
-    "z": "tab-orchestration",
-    "name": "TODO: Call Notification Service\nPOST /notification/send\nOnly call if inventory reserved",
-    "method": "POST",
-    "ret": "obj",
-    "paytoqs": "ignore",
-    "url": "",
-    "tls": "",
-    "persist": false,
-    "proxy": "",
-    "authType": "",
-    "x": 420,
-    "y": 440,
-    "wires": [[]]
-  },
-  {
-    "id": "orch-response",
-    "type": "http response",
-    "z": "tab-orchestration",
-    "name": "TODO: Return orchestration result\nInclude { orderId, correlationId, status, trace: [...] }",
-    "statusCode": "",
-    "headers": { "content-type": "application/json" },
-    "x": 700,
-    "y": 440,
-    "wires": []
-  },
-  {
-    "id": "tab-error-handling",
-    "type": "tab",
-    "label": "Error Handling",
-    "disabled": false,
-    "info": "Compensation and error flows.\nWire these nodes into the Orchestration tab when a step fails.\nCompensation must run in REVERSE ORDER of the steps that succeeded."
-  },
-  {
-    "id": "eh-release-inventory",
-    "type": "function",
-    "z": "tab-error-handling",
-    "name": "TODO: Compensation Step 1\nRelease Inventory\nPOST /inventory/release\nRun this FIRST if shipping/notification failed after inventory reserved",
-    "func": "// TODO: call inventory-service POST /inventory/release\n// Include orderId, correlationId, reservationId in the request body\n// After successful release, pass to Compensation Step 2 (refund)\nnode.error('Inventory release not implemented');\nreturn null;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 220,
-    "y": 120,
-    "wires": [[]]
-  },
-  {
-    "id": "eh-refund-payment",
-    "type": "function",
-    "z": "tab-error-handling",
-    "name": "TODO: Compensation Step 2\nRefund Payment\nPOST /payment/refund\nRun this SECOND (after inventory released, or if inventory failed)",
-    "func": "// TODO: call payment-service POST /payment/refund\n// Include orderId, correlationId, transactionId in the request body\n// After successful refund, build the 'compensated' response\nnode.error('Payment refund not implemented');\nreturn null;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 220,
-    "y": 240,
-    "wires": [[]]
-  },
-  {
-    "id": "eh-dlq",
-    "type": "function",
-    "z": "tab-error-handling",
-    "name": "TODO: Dead Letter Channel\nHandle unrecoverable failures\n(e.g. compensation itself fails, or max retries exceeded)",
-    "func": "// TODO: implement Dead Letter Channel handling\n// Options:\n//   - Log the failed message to a file\n//   - Publish to a RabbitMQ DLQ (bonus)\n//   - Store in a dead-letter in-memory queue with admin GET endpoint\n// The message here is permanently unprocessable — log it for manual review\nnode.warn('Dead letter: ' + JSON.stringify(msg.payload));\nreturn msg;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 220,
-    "y": 360,
-    "wires": [[]]
-  },
-  {
-    "id": "eh-debug",
-    "type": "debug",
-    "z": "tab-error-handling",
-    "name": "TODO: Log dead letter for admin inspection",
-    "active": true,
-    "tosidebar": true,
-    "console": true,
-    "tostatus": false,
-    "complete": "payload",
-    "targetType": "msg",
-    "statusVal": "",
-    "statusType": "auto",
-    "x": 500,
-    "y": 360,
-    "wires": []
-  },
-  {
-    "id": "tab-admin",
-    "type": "tab",
-    "label": "Admin",
-    "disabled": false,
-    "info": "Health check and debugging endpoints.\nThe /health endpoint is already wired and working.\nAdd a /trace/:orderId endpoint to help debug your orchestration flow."
-  },
-  {
-    "id": "admin-health-in",
-    "type": "http in",
-    "z": "tab-admin",
-    "name": "GET /health",
-    "url": "/health",
-    "method": "get",
-    "upload": false,
-    "swaggerDoc": "",
-    "x": 140,
-    "y": 80,
-    "wires": [["admin-health-fn"]]
-  },
-  {
-    "id": "admin-health-fn",
-    "type": "function",
-    "z": "tab-admin",
-    "name": "Health response",
-    "func": "msg.payload = { status: 'ok', service: 'node-red' };\nmsg.statusCode = 200;\nreturn msg;",
-    "outputs": 1,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 320,
-    "y": 80,
-    "wires": [["admin-health-out"]]
-  },
-  {
-    "id": "admin-health-out",
-    "type": "http response",
-    "z": "tab-admin",
-    "name": "HTTP Response",
-    "statusCode": "200",
-    "headers": { "content-type": "application/json" },
-    "x": 520,
-    "y": 80,
-    "wires": []
-  },
-  {
-    "id": "admin-trace-in",
-    "type": "http in",
-    "z": "tab-admin",
-    "name": "TODO: GET /trace/:orderId\nReturn saga trace for debugging",
-    "url": "/trace/:orderId",
-    "method": "get",
-    "upload": false,
-    "swaggerDoc": "",
-    "x": 160,
-    "y": 200,
-    "wires": [[]]
-  }
+    {
+        "id": "tab-example",
+        "type": "tab",
+        "label": "Example",
+        "disabled": false,
+        "info": "Hello-world reference flow. You can delete this tab when you are done."
+    },
+    {
+        "id": "tab-orchestration",
+        "type": "tab",
+        "label": "Orchestration",
+        "disabled": false,
+        "info": "Main business process flow.\nBuild the happy path here: order intake → routing → payment → inventory → notification → response.\nAlso wire in the error paths that lead to the Error Handling tab."
+    },
+    {
+        "id": "tab-error-handling",
+        "type": "tab",
+        "label": "Error Handling",
+        "disabled": false,
+        "info": "Compensation and error flows.\nWire these nodes into the Orchestration tab when a step fails.\nCompensation must run in REVERSE ORDER of the steps that succeeded."
+    },
+    {
+        "id": "tab-admin",
+        "type": "tab",
+        "label": "Admin",
+        "disabled": false,
+        "info": "Health check and debugging endpoints.\nThe /health endpoint is already wired and working.\nAdd a /trace/:orderId endpoint to help debug your orchestration flow."
+    },
+    {
+        "id": "example-http-in",
+        "type": "http in",
+        "z": "tab-example",
+        "name": "GET /hello",
+        "url": "/hello",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "example-fn"
+            ]
+        ]
+    },
+    {
+        "id": "example-fn",
+        "type": "function",
+        "z": "tab-example",
+        "name": "Say hello",
+        "func": "msg.payload = { message: 'Hello from Node-RED!' };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 80,
+        "wires": [
+            [
+                "example-http-out"
+            ]
+        ]
+    },
+    {
+        "id": "example-http-out",
+        "type": "http response",
+        "z": "tab-example",
+        "name": "HTTP Response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 520,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "95e7b38bdb9001d7",
+        "type": "inject",
+        "z": "tab-example",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 320,
+        "y": 280,
+        "wires": [
+            [
+                "481a9774b68a9464"
+            ]
+        ]
+    },
+    {
+        "id": "481a9774b68a9464",
+        "type": "http request",
+        "z": "tab-example",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://order-service:3001/health",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 550,
+        "y": 280,
+        "wires": [
+            [
+                "d52d0fae5c4ea652"
+            ]
+        ]
+    },
+    {
+        "id": "d52d0fae5c4ea652",
+        "type": "debug",
+        "z": "tab-example",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "545741552f9f2fb4",
+        "type": "http in",
+        "z": "tab-orchestration",
+        "name": "",
+        "url": "/order",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 90,
+        "y": 160,
+        "wires": [
+            [
+                "f21779de2280b116"
+            ]
+        ]
+    },
+    {
+        "id": "f21779de2280b116",
+        "type": "switch",
+        "z": "tab-orchestration",
+        "name": "",
+        "property": "payload.orderType",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "standard",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "express",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 270,
+        "y": 160,
+        "wires": [
+            [
+                "8bf39cb5026bcc7a"
+            ],
+            [
+                "8bf39cb5026bcc7a"
+            ]
+        ]
+    },
+    {
+        "id": "8bf39cb5026bcc7a",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "Init Order",
+        "rules": [
+            {
+                "t": "set",
+                "p": "correlationId",
+                "pt": "msg",
+                "to": "_msgid",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "trace",
+                "pt": "msg",
+                "to": "[]",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "orderType",
+                "pt": "msg",
+                "to": "payload.orderType",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 160,
+        "wires": [
+            [
+                "3d4d627c047282d5"
+            ]
+        ]
+    },
+    {
+        "id": "3d4d627c047282d5",
+        "type": "http request",
+        "z": "tab-orchestration",
+        "name": "Create Order",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://order-service:3001/orders",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 630,
+        "y": 160,
+        "wires": [
+            [
+                "db4599d8361c0f76"
+            ]
+        ]
+    },
+    {
+        "id": "db4599d8361c0f76",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "trace",
+                "pt": "msg",
+                "to": "$append(msg.trace, {\"step\": \"order-creation\", \"status\": \"success\"})",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "savedOrderId",
+                "pt": "msg",
+                "to": "payload.orderId",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 840,
+        "y": 160,
+        "wires": [
+            [
+                "9b1ed782a38a81e3"
+            ]
+        ]
+    },
+    {
+        "id": "9b1ed782a38a81e3",
+        "type": "http request",
+        "z": "tab-orchestration",
+        "name": "Authorize Payment",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://payment-service:3002/payment/authorize",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 1070,
+        "y": 160,
+        "wires": [
+            [
+                "1f6de7612574b934"
+            ]
+        ]
+    },
+    {
+        "id": "d9839e1384012203",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "trace",
+                "pt": "msg",
+                "to": "$append(msg.trace, {\"step\": \"payment\", \"status\": \"success\"})",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1460,
+        "y": 160,
+        "wires": [
+            [
+                "1c256e1753dd7267"
+            ]
+        ]
+    },
+    {
+        "id": "1c256e1753dd7267",
+        "type": "http request",
+        "z": "tab-orchestration",
+        "name": "Reserve Inventory",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://inventory-service:3003/inventory/reserve",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 1670,
+        "y": 160,
+        "wires": [
+            [
+                "07a30170cbef11be"
+            ]
+        ]
+    },
+    {
+        "id": "0fdd6c70e7ef2527",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "trace",
+                "pt": "msg",
+                "to": "$append(msg.trace, {\"step\": \"inventory\", \"status\": \"success\"})",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 2080,
+        "y": 160,
+        "wires": [
+            [
+                "1ed23a09737dc40d"
+            ]
+        ]
+    },
+    {
+        "id": "c5611f312e49e014",
+        "type": "http response",
+        "z": "tab-orchestration",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 2450,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "1ed23a09737dc40d",
+        "type": "function",
+        "z": "tab-orchestration",
+        "name": "function 1",
+        "func": "msg.payload = {\n    orderId: msg.savedOrderId || \"N/A\", \n    correlationId: msg.correlationId,\n    status: (msg.payload.status === \"refunded\" || msg.payload.status === \"compensated\") ? \"compensated\" : (msg.payload.status || \"completed\"),\n    trace: msg.trace\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2300,
+        "y": 160,
+        "wires": [
+            [
+                "c5611f312e49e014"
+            ]
+        ]
+    },
+    {
+        "id": "80c2f50bc6254ce9",
+        "type": "function",
+        "z": "tab-orchestration",
+        "name": "function 2",
+        "func": "node.warn(msg);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 1080,
+        "wires": [
+            [
+                "ad58ba9faee568d6"
+            ]
+        ]
+    },
+    {
+        "id": "ad58ba9faee568d6",
+        "type": "debug",
+        "z": "tab-orchestration",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "1f6de7612574b934",
+        "type": "switch",
+        "z": "tab-orchestration",
+        "name": "",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1250,
+        "y": 160,
+        "wires": [
+            [
+                "d9839e1384012203"
+            ],
+            [
+                "b4ddf5d601e46f9c"
+            ]
+        ]
+    },
+    {
+        "id": "b4ddf5d601e46f9c",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.status",
+                "pt": "msg",
+                "to": "failed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1470,
+        "y": 380,
+        "wires": [
+            [
+                "c5611f312e49e014"
+            ]
+        ]
+    },
+    {
+        "id": "07a30170cbef11be",
+        "type": "switch",
+        "z": "tab-orchestration",
+        "name": "",
+        "property": "statusCode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1870,
+        "y": 160,
+        "wires": [
+            [
+                "0fdd6c70e7ef2527"
+            ],
+            [
+                "7bdf0a52e05ba0da"
+            ]
+        ]
+    },
+    {
+        "id": "7bdf0a52e05ba0da",
+        "type": "change",
+        "z": "tab-orchestration",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "http://payment-service:3002/payment/refund",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.status",
+                "pt": "msg",
+                "to": "compensated",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "trace",
+                "pt": "msg",
+                "to": "$append(msg.trace, {\"step\": \"payment-refund\", \"status\": \"success\"})",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1900,
+        "y": 280,
+        "wires": [
+            [
+                "8eea17ec3e95dec0"
+            ]
+        ]
+    },
+    {
+        "id": "8eea17ec3e95dec0",
+        "type": "http request",
+        "z": "tab-orchestration",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 2110,
+        "y": 240,
+        "wires": [
+            [
+                "1ed23a09737dc40d"
+            ]
+        ]
+    },
+    {
+        "id": "eh-release-inventory",
+        "type": "function",
+        "z": "tab-error-handling",
+        "name": "TODO: Compensation Step 1\nRelease Inventory\nPOST /inventory/release\nRun this FIRST if shipping/notification failed after inventory reserved",
+        "func": "// TODO: call inventory-service POST /inventory/release\n// Include orderId, correlationId, reservationId in the request body\n// After successful release, pass to Compensation Step 2 (refund)\nnode.error('Inventory release not implemented');\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "eh-refund-payment",
+        "type": "function",
+        "z": "tab-error-handling",
+        "name": "TODO: Compensation Step 2\nRefund Payment\nPOST /payment/refund\nRun this SECOND (after inventory released, or if inventory failed)",
+        "func": "// TODO: call payment-service POST /payment/refund\n// Include orderId, correlationId, transactionId in the request body\n// After successful refund, build the 'compensated' response\nnode.error('Payment refund not implemented');\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "eh-dlq",
+        "type": "function",
+        "z": "tab-error-handling",
+        "name": "TODO: Dead Letter Channel\nHandle unrecoverable failures\n(e.g. compensation itself fails, or max retries exceeded)",
+        "func": "// TODO: implement Dead Letter Channel handling\n// Options:\n//   - Log the failed message to a file\n//   - Publish to a RabbitMQ DLQ (bonus)\n//   - Store in a dead-letter in-memory queue with admin GET endpoint\n// The message here is permanently unprocessable — log it for manual review\nnode.warn('Dead letter: ' + JSON.stringify(msg.payload));\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "eh-debug",
+        "type": "debug",
+        "z": "tab-error-handling",
+        "name": "TODO: Log dead letter for admin inspection",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "admin-health-in",
+        "type": "http in",
+        "z": "tab-admin",
+        "name": "GET /health",
+        "url": "/health",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "admin-health-fn"
+            ]
+        ]
+    },
+    {
+        "id": "admin-health-fn",
+        "type": "function",
+        "z": "tab-admin",
+        "name": "Health response",
+        "func": "msg.payload = { status: 'ok', service: 'node-red' };\nmsg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 80,
+        "wires": [
+            [
+                "admin-health-out"
+            ]
+        ]
+    },
+    {
+        "id": "admin-health-out",
+        "type": "http response",
+        "z": "tab-admin",
+        "name": "HTTP Response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 520,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "admin-trace-in",
+        "type": "http in",
+        "z": "tab-admin",
+        "name": "TODO: GET /trace/:orderId\nReturn saga trace for debugging",
+        "url": "/trace/:orderId",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    }
 ]

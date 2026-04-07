@@ -13,21 +13,17 @@ version: "3.8"
 # ─────────────────────────────────────────────────────────────────────
 
 services:
-
-  # ── Node-RED Orchestration & Integration Layer ──────────────────────
-  # This is your integration bus and orchestration engine.
-  # Open the editor at http://localhost:${NODERED_HOST_PORT}
-  # Inside flows, use service names as hostnames (e.g. http://order-service:3001)
   nodered:
     build:
       context: .
       dockerfile: Dockerfile.nodered
     ports:
-      - "${NODERED_HOST_PORT:-1880}:1880"
-    volumes:
-      - ./flows.json:/data/flows.json
+      - "1880:1880"
+    user: root
+    tmpfs:
+      - /data
     environment:
-      # Downstream service URLs — use these in your http-request nodes
+      NODE_RED_HOME: /data
       ORDER_URL: http://order-service:3001
       PAYMENT_URL: http://payment-service:3002
       INVENTORY_URL: http://inventory-service:3003
@@ -41,7 +37,7 @@ services:
       - payment-service
       - inventory-service
       - notification-service
-
+ 
   # ── Order Service ────────────────────────────────────────────────────
   # Business-domain service for order management.
   # YOU MUST IMPLEMENT: order-service/server.js
