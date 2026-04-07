@@ -11,43 +11,90 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 
 ---
 
-## 2. Integration Diagrams
+## 2. Architecture Diagrams
 
-### Sequence Diagram (Saga Pattern)
-This diagram shows the "Happy Path" and how the system handles failures using the Saga pattern.
+### 2.1 System Context Diagram
+This diagram shows the high-level landscape of the services and the integration layer.
 
 ```mermaid
+graph TD
+    Client["Client (Web / Mobile / B2B)"]
+
+    subgraph IntegrationLayer["Integration Layer (Node-RED)"]
+        Router["Content-Based Router (Routes by orderType)"]
+        Orchestrator["Process Orchestrator (Controls flow & compensation)"]
+    end
+
+    subgraph Services["Business Services"]
+        Order["Order Service (POST /orders)"]
+        Payment["Payment Service (POST /payment/authorize / refund)"]
+        Inventory["Inventory Service (POST /inventory/reserve / release)"]
+        Notification["Notification Service (POST /notification/send)"]
+    end
+
+    DLQ["Dead Letter Channel (In-memory DLQ)"]
+
+    Client -->|"HTTP POST /order"| IntegrationLayer
+    Router -->|"HTTP JSON/XML"| Order
+    Orchestrator -->|"HTTP POST"| Payment
+    Orchestrator -->|"HTTP POST"| Inventory
+    Orchestrator -->|"HTTP POST"| Notification
+
+    Orchestrator -.->|"on critical failure"| DLQ
+    Inventory -.->|"compensation"| Orchestrator
+    Payment -.->|"compensation"| Orchestrator
+
 sequenceDiagram
     participant C as Client
     participant NR as Node-RED
-    participant OS as Order Service
-    participant PS as Payment Service
-    participant IS as Inventory Service
+    participant O as Order Service
+    participant P as Payment Service
+    participant I as Inventory Service
+    participant N as Notification Service
+    participant DLQ as Dead Letter Channel
 
-    C->>NR: POST /order
-    NR->>OS: Create Order
-    OS-->>NR: Order Created
+    C->>NR: POST /order (correlationId)
 
-    NR->>PS: Authorize Payment
-    alt Payment fails
-        PS-->>NR: 402 Payment Required
-        NR-->>C: status failed
-    else Payment succeeds
-        PS-->>NR: 200 OK
+    NR->>O: POST /orders
+    O-->>NR: { orderId }
 
-        NR->>IS: Reserve Inventory
-        alt Inventory fails
-            IS-->>NR: 503 Service Unavailable
-            NR->>PS: Refund Payment
-            PS-->>NR: Refund OK
-            NR-->>C: status compensated
-        else Inventory succeeds
-            IS-->>NR: 200 OK
+    NR->>P: POST /payment/authorize
+    P-->>NR: { status }
+
+    alt Payment success
+        NR->>I: POST /inventory/reserve
+        I-->>NR: { status }
+
+        alt Inventory success
+            NR->>N: POST /notification/send
+            N-->>NR: { status }
             NR-->>C: status completed
+        else Inventory failure
+            NR->>P: POST /payment/refund
+            P-->>NR: refunded
+            NR-->>C: status compensated
         end
+
+    else Payment failure
+        NR-->>C: status failed
     end
 
----
+    note over NR,DLQ: If refund fails, message lands in DLQ
+
+flowchart TD
+    A[Receive Order] --> B[Create Order Record]
+    B --> C{Authorize Payment}
+
+    C -->|Success| D{Reserve Inventory}
+    C -->|Fail| F[Return Failed Status]
+
+    D -->|Success| E[Send Notification]
+    D -->|Fail| G[Compensate: Refund Payment]
+
+    E --> H[Return Completed Status]
+    G --> I[Return Compensated Status]
+
+    G --> |System Error| DLQ[Dead Letter Channel]
 
 ## 3. Pattern Mapping Table
 
