@@ -7,14 +7,13 @@ This project implements a microservices integration system using **Node-RED** as
 ## 1. Architecture Decision
 
 **Chosen Approach: Option A (Node-RED as Entry Point)**
-I chose this approach because it follows the **Pure Orchestrator** pattern. By making Node-RED the entry point, the business logic is completely decoupled from the individual microservices. This makes the system more flexible: we can change the order of steps (e.g., add a discount service) or scale individual components without ever touching the code of the `Order Service`.
+I chose this approach because it follows the **Pure Orchestrator** pattern. By making Node-RED the entry point, the business logic is completely decoupled from the individual microservices. This makes the system more flexible: we can change the order of steps or scale individual components without ever touching the code of the `Order Service`.
 
 ---
 
 ## 2. Integration Diagrams
 
 ### Sequence Diagram (Saga Pattern)
-
 This diagram shows the "Happy Path" and how the system handles failures using the Saga pattern.
 
 ```mermaid
