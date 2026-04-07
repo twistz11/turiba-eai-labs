@@ -17,7 +17,6 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 
 This diagram shows the "Happy Path" and how the system handles failures using the Saga pattern.
 
-```mermaid
 sequenceDiagram
     participant C as Client
     participant NR as Node-RED
@@ -27,20 +26,24 @@ sequenceDiagram
 
     C->>NR: POST /order
     NR->>OS: Create Order
+    OS-->>NR: Order Created
+
     NR->>PS: Authorize Payment
-    alt Payment Fails (Scenario 1)
-        PS-->>NR: 402 Error
-        NR-->>C: status: failed
-    else Payment Success
+    alt Payment fails
+        PS-->>NR: 402 Payment Required
+        NR-->>C: status failed
+    else Payment succeeds
         PS-->>NR: 200 OK
+
         NR->>IS: Reserve Inventory
-        alt Inventory Fails (Scenario 2)
-            IS-->>NR: 503 Error
-            NR->>PS: Refund Payment (Compensate)
-            NR-->>C: status: compensated
-        else Inventory Success
+        alt Inventory fails
+            IS-->>NR: 503 Service Unavailable
+            NR->>PS: Refund Payment
+            PS-->>NR: Refund OK
+            NR-->>C: status compensated
+        else Inventory succeeds
             IS-->>NR: 200 OK
-            NR-->>C: status: completed
+            NR-->>C: status completed
         end
     end
 
