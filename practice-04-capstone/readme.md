@@ -14,6 +14,7 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 ## 2. Integration Diagrams
 
 ### Sequence Diagram (Saga Pattern)
+
 This diagram shows the "Happy Path" and how the system handles failures using the Saga pattern.
 
 ```mermaid
@@ -41,6 +42,7 @@ sequenceDiagram
             IS-->>NR: 200 OK
             NR-->>C: status: completed
         end
+    end
 
 ## 3. Pattern Mapping Table
 
