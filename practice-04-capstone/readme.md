@@ -1,9 +1,5 @@
 # Capstone: Orchestrated EAI System
 
-This project implements a microservices integration system using **Node-RED** as a central orchestrator. It manages the lifecycle of an order across multiple independent services: Order, Payment, Inventory, and Notification.
-
----
-
 ## 1. Architecture Decision
 
 **Chosen Approach: Option A (Node-RED as Entry Point)**
@@ -14,8 +10,6 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 ## 2. Architecture Diagrams
 
 ### 2.1 System Context Diagram
-This diagram shows the high-level landscape of the services and the integration layer.
-
 ```mermaid
 graph TD
     Client["Client (Web / Mobile / B2B)"]
@@ -40,10 +34,11 @@ graph TD
     Orchestrator -->|"HTTP POST"| Inventory
     Orchestrator -->|"HTTP POST"| Notification
 
-    Orchestrator -.->|"on critical failure"| DLQ
-    Inventory -.->|"compensation"| Orchestrator
-    Payment -.->|"compensation"| Orchestrator
+    Orchestrator -.->|"on failure"| DLQ
+    Inventory -.->|"compensation: release"| Orchestrator
+    Payment -.->|"compensation: refund"| Orchestrator
 
+### 2.2 Integration Architecture Diagram
 sequenceDiagram
     participant C as Client
     participant NR as Node-RED
@@ -79,8 +74,8 @@ sequenceDiagram
         NR-->>C: status failed
     end
 
-    note over NR,DLQ: If refund fails, message lands in DLQ
-
+    note over NR,DLQ: If refund fails, lands in DLQ
+### 2.3 Orchestration Flow
 flowchart TD
     A[Receive Order] --> B[Create Order Record]
     B --> C{Authorize Payment}
@@ -94,5 +89,5 @@ flowchart TD
     E --> H[Return Completed Status]
     G --> I[Return Compensated Status]
 
-    G --> |System Error| DLQ[Dead Letter Channel]
-
+    G --> |Fail| DLQ[Dead Letter Channel]
+---
