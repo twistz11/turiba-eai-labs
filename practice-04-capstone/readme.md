@@ -30,7 +30,6 @@ graph TD
 
 ```mermaid
 graph TD
-   
     subgraph Client_Layer [External Layer]
         User((User/Client))
         CURL[Terminal / cURL]
@@ -61,33 +60,26 @@ graph TD
         DLQ[Dead Letter Queue: payment.dlq]
     end
 
-    
     User --> NR_HTTP
     CURL --> NR_HTTP
     CURL --> NR_Admin
-
     NR_HTTP --> Logic
     NR_Admin --> OS & PS & IS
-
     Logic --> Router
     Router --> Trans
-    
     Trans -- "REST API" --> OS
     Trans -- "REST API" --> PS
     Trans -- "REST API" --> IS
     Trans -- "REST API" --> NS
-
-   
+    Error -- "AMQP" --> MQ
     MQ --> DLQ
 
-   
-    style Entry_Layer fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
-    style Orchestration_Layer fill:#e8f5e9,stroke:#4caf50,stroke-width:2px,color:#000
-    style Service_Layer fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#000
-    style Messaging_Layer fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000
-    style Client_Layer fill:#ffffff,stroke:#9e9e9e,stroke-dasharray: 5 5,color:#000
+    style Entry_Layer fill:#ffd54f,stroke:#fbc02d,stroke-width:2px,color:#000
+    style Orchestration_Layer fill:#81c784,stroke:#388e3c,stroke-width:2px,color:#000
+    style Service_Layer fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style Messaging_Layer fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Client_Layer fill:#eceff1,stroke:#90a4ae,stroke-dasharray: 5 5,color:#000
 
-    
     linkStyle default stroke:#ffffff,stroke-width:2px
 ```
 ---
