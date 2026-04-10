@@ -12,17 +12,45 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 ### 2.1 System Context Diagram
 
 ```mermaid
-graph TD
-    Client[Customer/Client] -- "POST /order (JSON/XML)" --> NR[Node-RED Orchestrator]
+graph LR
     
-    subgraph "Internal Services"
-        NR -- "HTTP/REST" --> OS[Order Service]
-        NR -- "HTTP/REST" --> PS[Payment Service]
-        NR -- "HTTP/REST" --> IS[Inventory Service]
-        NR -- "HTTP/REST" --> NS[Notification Service]
-    end
+    System((EAI Integration System))
+    
+    
+    Client[Customer / Client]
+    Admin[System Administrator]
+    OrderSvc[Order Service]
+    PaymentSvc[Payment Service]
+    InvSvc[Inventory Service]
+    NotifSvc[Notification Service]
+    MQ[(RabbitMQ Broker)]
 
-    NR -- "AMQP" --> RMQ[(RabbitMQ DLQ)]
+    
+    Client -- "Order Request (JSON/XML)" --> System
+    System -- "Final Order Status" --> Client
+    
+    Admin -- "Reset Commands" --> System
+    System -- "Health Status" --> Admin
+    
+    System -- "Manage Records" --> OrderSvc
+    System -- "Authorize & Refund" --> PaymentSvc
+    System -- "Reserve & Release" --> InvSvc
+    System -- "Send Alerts" --> NotifSvc
+    
+    System -- "Dead Letters" --> MQ
+
+    
+    style System fill:#ffd54f,stroke:#fbc02d,stroke-width:4px,color:#000
+    style Client fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style Admin fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style OrderSvc fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style PaymentSvc fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style InvSvc fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style NotifSvc fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+    style MQ fill:#3f51b5,stroke:#1a237e,stroke-width:2px,color:#fff
+
+    
+    linkStyle default stroke:#ffffff,stroke-width:2px
 ```
 ---
 
