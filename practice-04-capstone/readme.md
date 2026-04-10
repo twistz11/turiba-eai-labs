@@ -13,95 +13,75 @@ I chose this approach because it follows the **Pure Orchestrator** pattern. By m
 
 ```mermaid
 graph TD
-
-    Client["Client (Web / Mobile / B2B)"]
-
-    subgraph IntegrationLayer["Integration Layer (Node-RED)"]
-        Router["Content-Based Router"]
-        Orchestrator["Process Orchestrator"]
+    Client[Customer/Client] -- "POST /order (JSON/XML)" --> NR[Node-RED Orchestrator]
+    
+    subgraph "Internal Services"
+        NR -- "HTTP/REST" --> OS[Order Service]
+        NR -- "HTTP/REST" --> PS[Payment Service]
+        NR -- "HTTP/REST" --> IS[Inventory Service]
+        NR -- "HTTP/REST" --> NS[Notification Service]
     end
 
-    subgraph Services["Business Services"]
-        Order["Order Service"]
-        Payment["Payment Service"]
-        Inventory["Inventory Service"]
-        Notification["Notification Service"]
-    end
-
-    DLQ["Dead Letter Channel"]
-
-    Client -->|"POST /order"| Router
-
-    Router --> Order
-    Orchestrator --> Payment
-    Orchestrator --> Inventory
-    Orchestrator --> Notification
-
-    Orchestrator -.->|"failure"| DLQ
-    Inventory -.->|"release"| Orchestrator
-    Payment -.->|"refund"| Orchestrator
+    NR -- "AMQP" --> RMQ[(RabbitMQ DLQ)]
 ```
 ---
 
 ## 2.2 Integration Architecture Diagram
 
 ```mermaid
-sequenceDiagram
-    participant C as Client
-    participant NR as Node-RED
-    participant O as Order Service
-    participant P as Payment Service
-    participant I as Inventory Service
-    participant N as Notification Service
-    participant DLQ as Dead Letter Channel
-
-    C->>NR: POST /order
-
-    NR->>O: create order
-    O-->>NR: orderId
-
-    NR->>P: authorize payment
-    P-->>NR: status
-
-    alt payment success
-        NR->>I: reserve inventory
-        I-->>NR: status
-
-        alt inventory success
-            NR->>N: send notification
-            N-->>NR: ok
-            NR-->>C: completed
-        else inventory failure
-            NR->>P: refund
-            P-->>NR: refunded
-            NR-->>C: compensated
-        end
-    else payment failure
-        NR-->>C: failed
+flowchart LR
+    Client((Client)) -- "HTTP" --> API[NR Entry Point]
+    
+    subgraph "Success Path"
+        API --> OS["Order Svc (Port 3001)"]
+        OS --> PS["Payment Svc (Port 3002)"]
+        PS --> IS["Inventory Svc (Port 3003)"]
+        IS --> NS["Notification Svc (Port 3004)"]
     end
 
-    note over NR,DLQ: refund failure -> DLQ
+    subgraph "Error Handling"
+        PS -- "Failure" --> COMP[Compensation Logic]
+        IS -- "Failure" --> COMP
+        API -- "System Error" --> DLQ["RabbitMQ (Port 5672)"]
+    end
+    
+    COMP -- "Refund" --> PS
 ```
 ---
 
 ## 2.3 Orchestration Flow
 
 ```mermaid
-flowchart TD
+sequenceDiagram
+    participant C as Client
+    participant NR as Node-RED
+    participant P as Payment Svc
+    participant I as Inventory Svc
+    participant N as Notification Svc
 
-    A[Receive Order] --> B[Create Order]
-    B --> C{Authorize Payment}
-
-    C -->|Success| D{Reserve Inventory}
-    C -->|Fail| F[Return Failed]
-
-    D -->|Success| E[Send Notification]
-    D -->|Fail| G[Refund Payment]
-
-    E --> H[Return Completed]
-    G --> I[Return Compensated]
-
-    G -->|Fail| DLQ[Dead Letter Channel]
+    C->>NR: POST /order
+    NR->>P: POST /payment/authorize
+    
+    alt Payment Authorized
+        P-->>NR: status: authorized
+        NR->>I: POST /inventory/reserve
+        
+        alt Inventory Reserved
+            I-->>NR: status: reserved
+            NR->>N: POST /notification/send
+            N-->>NR: status: sent
+            NR-->>C: status: completed
+        else Inventory Unavailable (SCENARIO 2)
+            I-->>NR: status: unavailable
+            NR->>P: POST /payment/refund (Compensation)
+            P-->>NR: status: refunded
+            NR-->>C: status: compensated
+        end
+        
+    else Payment Rejected (SCENARIO 1)
+        P-->>NR: status: rejected
+        NR-->>C: status: failed
+    end
 ```
 ---
 ## 3. Pattern Mapping Table
