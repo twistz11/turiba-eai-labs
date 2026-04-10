@@ -52,35 +52,38 @@ flowchart LR
 ## 2.3 Orchestration Flow
 
 ```mermaid
-sequenceDiagram
-    participant C as Client
-    participant NR as Node-RED
-    participant P as Payment Svc
-    participant I as Inventory Svc
-    participant N as Notification Svc
+flowchart TD
+    %% Styles
+    classDef startEnd fill:#a04070,stroke:#333,stroke-width:2px,color:#fff;
+    classDef process fill:#4488cc,stroke:#333,stroke-width:1px,color:#fff;
+    classDef decision fill:#2277bb,stroke:#333,stroke-width:1px,color:#fff;
 
-    C->>NR: POST /order
-    NR->>P: POST /payment/authorize
+    Start((Start)):::startEnd --> Receive[Customer Places Order]:::process
+    Receive --> CreateOrder[Order Service: Create Record]:::process
     
-    alt Payment Authorized
-        P-->>NR: status: authorized
-        NR->>I: POST /inventory/reserve
-        
-        alt Inventory Reserved
-            I-->>NR: status: reserved
-            NR->>N: POST /notification/send
-            N-->>NR: status: sent
-            NR-->>C: status: completed
-        else Inventory Unavailable (SCENARIO 2)
-            I-->>NR: status: unavailable
-            NR->>P: POST /payment/refund (Compensation)
-            P-->>NR: status: refunded
-            NR-->>C: status: compensated
-        end
-        
-    else Payment Rejected (SCENARIO 1)
-        P-->>NR: status: rejected
-        NR-->>C: status: failed
+    %% Payment Step
+    CreateOrder --> PayCheck{Payment Authorized?}:::decision
+    
+    PayCheck -- No --> SetFail[Status: FAILED]:::process
+    
+    PayCheck -- Yes --> InvCheck{Inventory Reserved?}:::decision
+
+    %% Inventory Step
+    InvCheck -- Yes --> Notify[Notification Service: Send Email]:::process
+    Notify --> SetComplete[Status: COMPLETED]:::process
+    
+    %% Compensation Step (Scenario 2)
+    InvCheck -- No --> Refund[Payment Service: REFUND]:::process
+    Refund --> SetComp[Status: COMPENSATED]:::process
+
+    %% Endings
+    SetFail --> End((End)):::startEnd
+    SetComplete --> End
+    SetComp --> End
+
+    subgraph Legend [Process Flow]
+        direction LR
+        L1[Success Path] --- L2[Failure Path] --- L3[Compensation Path]
     end
 ```
 ---
