@@ -29,23 +29,65 @@ graph TD
 ## 2.2 Integration Architecture Diagram
 
 ```mermaid
-flowchart LR
-    Client((Client)) -- "HTTP" --> API[NR Entry Point]
+graph TD
     
-    subgraph "Success Path"
-        API --> OS["Order Svc (Port 3001)"]
-        OS --> PS["Payment Svc (Port 3002)"]
-        PS --> IS["Inventory Svc (Port 3003)"]
-        IS --> NS["Notification Svc (Port 3004)"]
+    subgraph Client_Layer [External Layer]
+        User((User/Client))
+        CURL[Terminal / cURL]
     end
 
-    subgraph "Error Handling"
-        PS -- "Failure" --> COMP[Compensation Logic]
-        IS -- "Failure" --> COMP
-        API -- "System Error" --> DLQ["RabbitMQ (Port 5672)"]
+    subgraph Entry_Layer [Security & API Gateway Layer]
+        NR_HTTP[Node-RED HTTP In: /order]
+        NR_Admin[Node-RED Admin API: /reset]
     end
+
+    subgraph Orchestration_Layer [Enterprise Integration Layer - Node-RED]
+        direction TB
+        Logic[Saga Orchestrator Logic]
+        Router{Content-Based Router}
+        Trans[Message Translator]
+        Error[Error Handler / Catch]
+    end
+
+    subgraph Service_Layer [Microservices Layer - Docker Containers]
+        OS[Order Service :3001]
+        PS[Payment Service :3002]
+        IS[Inventory Service :3003]
+        NS[Notification Service :3004]
+    end
+
+    subgraph Messaging_Layer [Reliability & Messaging Layer]
+        MQ[(RabbitMQ Message Broker)]
+        DLQ[Dead Letter Queue: payment.dlq]
+    end
+
+   
+    User --> NR_HTTP
+    CURL --> NR_HTTP
+    CURL --> NR_Admin
+
+    NR_HTTP --> Logic
+    NR_Admin --> OS & PS & IS
+
+    Logic --> Router
+    Router --> Trans
     
-    COMP -- "Refund" --> PS
+    
+    Trans -- "REST API (HTTP)" --> OS
+    Trans -- "REST API (HTTP)" --> PS
+    Trans -- "REST API (HTTP)" --> IS
+    Trans -- "REST API (HTTP)" --> NS
+
+    
+    Error -- "AMQP Protocol" --> MQ
+    MQ --> DLQ
+
+   
+    style Entry_Layer fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style Orchestration_Layer fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style Service_Layer fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style Messaging_Layer fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    style Client_Layer fill:#fafafa,stroke:#9e9e9e,stroke-dasharray: 5 5
 ```
 ---
 
@@ -53,7 +95,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    %% Styles
+    
     classDef startEnd fill:#a04070,stroke:#333,stroke-width:2px,color:#fff;
     classDef process fill:#4488cc,stroke:#333,stroke-width:1px,color:#fff;
     classDef decision fill:#2277bb,stroke:#333,stroke-width:1px,color:#fff;
@@ -61,22 +103,22 @@ flowchart TD
     Start((Start)):::startEnd --> Receive[Customer Places Order]:::process
     Receive --> CreateOrder[Order Service: Create Record]:::process
     
-    %% Payment Step
+    
     CreateOrder --> PayCheck{Payment Authorized?}:::decision
     
     PayCheck -- No --> SetFail[Status: FAILED]:::process
     
     PayCheck -- Yes --> InvCheck{Inventory Reserved?}:::decision
 
-    %% Inventory Step
+    
     InvCheck -- Yes --> Notify[Notification Service: Send Email]:::process
     Notify --> SetComplete[Status: COMPLETED]:::process
     
-    %% Compensation Step (Scenario 2)
+   
     InvCheck -- No --> Refund[Payment Service: REFUND]:::process
     Refund --> SetComp[Status: COMPENSATED]:::process
 
-    %% Endings
+   
     SetFail --> End((End)):::startEnd
     SetComplete --> End
     SetComp --> End
